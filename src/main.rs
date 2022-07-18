@@ -3,9 +3,10 @@ use clap::Parser;
 use kako_culc::my_utils;
 use serde::Deserialize;
 use std::fs;
+use std::io;
 use std::io::Write;
 
-#[derive(Parser)]
+#[derive(Parser, Debug)]
 struct AppArgs {
     #[clap(short = 'd', long = "date")]
     date: Option<String>,
@@ -13,6 +14,14 @@ struct AppArgs {
     amount: Option<f64>,
     #[clap(short = 'f', long = "data_file")]
     data_file: Option<String>,
+}
+impl AppArgs {
+    fn is_all_none(&self) -> bool {
+        if self.date == None && self.amount == None && self.data_file == None {
+            return true;
+        }
+        false
+    }
 }
 
 #[derive(Debug, Deserialize)]
@@ -77,7 +86,7 @@ fn get_target_exchange_info(date: &String) -> Option<ExchangeInfo> {
                 println!("------------------------------------------");
                 println!(
                     "{}",
-                    Colour::Blue.paint("💰計算に利用する為替データは次の通りです💰")
+                    Colour::Yellow.paint("💰計算に利用する為替データは次の通りです💰")
                 );
                 println!("------------------------------------------");
 
@@ -114,7 +123,7 @@ fn print_calculation_results(
             eur_to_usd_rate = exchange_info.eur_to_usd_opening_price.unwrap();
             println!("---------------------------");
             // println!("✨ 始値で換算した結果です ✨");
-            println!("{}", Colour::Blue.paint("✨ 始値で換算した結果です ✨"));
+            println!("✨ {} ✨", Colour::Cyan.paint("始値で換算した結果です"));
             println!("---------------------------");
         }
         OpenOrClose::ClosingPrice => {
@@ -122,7 +131,7 @@ fn print_calculation_results(
             eur_to_usd_rate = exchange_info.eur_to_usd_closing_price.unwrap();
             println!("---------------------------");
             // println!("✨ 終値で換算した結果です ✨");
-            println!("{}", Colour::Blue.paint("✨ 終値で換算した結果です ✨"));
+            println!("{}", Colour::Cyan.paint("✨ 終値で換算した結果です ✨"));
             println!("---------------------------");
         }
     }
@@ -174,14 +183,14 @@ fn main() {
     let args = AppArgs::parse();
     let mut target_exchange_info: Option<ExchangeInfo> = None;
 
-    // --data_file
-    if let Some(data_file) = args.data_file {
+    // --data_file (do first)
+    if let Some(data_file) = &args.data_file {
         println!("data_file: {:?}", data_file);
         create_utf8_csv_from(&data_file);
     }
 
     // --date
-    if let Some(date) = args.date {
+    if let Some(date) = &args.date {
         target_exchange_info = get_target_exchange_info(&date);
     };
 
@@ -197,8 +206,28 @@ fn main() {
             }
             Some(x) => {
                 print_calculation_results(OpenOrClose::OpeningPrice, amount, x);
-                print_calculation_results(OpenOrClose::ClosingPrice, amount, x)
+                print_calculation_results(OpenOrClose::ClosingPrice, amount, x);
+                println!("");
             }
         }
     };
+
+    // no args => menu
+    if args.is_all_none() {
+        let setup_command = "setup".to_string();
+        println!(
+            "為替データのセットアップをする場合は「{}」と入力してください。",
+            setup_command
+        );
+        println!(
+            "セットアップが済んでいる場合は「yyyymmdd amount」（日付と金額）を入力してください。"
+        );
+
+        let mut input_command = String::new();
+        io::stdin()
+            .read_line(&mut input_command)
+            .expect("Failed to read line");
+
+        if input_command == setup_command {}
+    }
 }
