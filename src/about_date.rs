@@ -1,11 +1,13 @@
 use crate::common::{ExchangeInfo, EXCHANGE_INFO_FILE_NAME};
-use crate::my_utils;
+use crate::my_utils::{self};
 use ansi_term::Colour;
 
 pub fn get_target_exchange_info(date: &String) -> Option<ExchangeInfo> {
+    let directory_info = my_utils::get_directory_info();
+
     let target_exchange_info = {
         let mut _target_exchange_info: Option<ExchangeInfo> = None;
-        let mut reader = csv::Reader::from_path(EXCHANGE_INFO_FILE_NAME).unwrap();
+        let mut reader = csv::Reader::from_path(directory_info.exchange_info_file_path).unwrap();
 
         for result in reader.deserialize() {
             let exchange_info: ExchangeInfo = result.unwrap();

@@ -37,3 +37,8 @@ pub enum OpenOrClose {
     OpeningPrice,
     ClosingPrice,
 }
+#[derive(Debug)]
+pub struct DirectoryInfo {
+    pub path_executed: String,
+    pub exchange_info_file_path: String,
+}

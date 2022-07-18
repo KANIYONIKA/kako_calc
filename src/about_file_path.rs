@@ -1,4 +1,5 @@
 use crate::common::EXCHANGE_INFO_FILE_NAME;
+use crate::my_utils;
 use ansi_term::Colour;
 use std::fs;
 use std::io::Write;
@@ -20,7 +21,8 @@ pub fn create_utf8_csv_from(data_file_not_utf8: &String) {
     let text = text.replace("FM08'FXERD31", "eur_to_usd_opening_price");
     let text = text.replace("FM08'FXERD34", "eur_to_usd_closing_price");
 
-    let mut exchange_info_file = fs::File::create(EXCHANGE_INFO_FILE_NAME).unwrap();
+    let directory_info = my_utils::get_directory_info();
+    let mut exchange_info_file = fs::File::create(&directory_info.exchange_info_file_path).unwrap();
     exchange_info_file.write(text.as_bytes()).unwrap();
 
     println!(
