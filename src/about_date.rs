@@ -42,7 +42,8 @@ pub fn get_target_exchange_info(date: &String) -> Option<ExchangeInfo> {
                 println!("------------------------------------------");
 
                 println!(
-                    "  日付: {} || $ → ¥: 始値: {:?}, 終値: {:?} || € → $: 始値: {:?}, 終値: {:?}",
+                    // "  日付: {} || $ → ¥: 始値: {:?}, 終値: {:?} || € → $: 始値: {:?}, 終値: {:?}",
+                    "  日付: {}\n    $ → ¥: 始値: {:?}, 終値: {:?}\n    € → $: 始値: {:?}, 終値: {:?}",
                     x.date,
                     x.usd_to_yen_opening_price.unwrap(),
                     x.usd_to_yen_closing_price.unwrap(),
