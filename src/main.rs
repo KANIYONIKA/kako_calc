@@ -1,6 +1,6 @@
 use ansi_term::Colour;
 use clap::Parser;
-use kako_culc::my_utils;
+use kako_calc::my_utils;
 use serde::Deserialize;
 use std::fs;
 use std::io;
