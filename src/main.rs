@@ -91,9 +91,9 @@ fn get_target_exchange_info(date: &String) -> Option<ExchangeInfo> {
                 get_target_exchange_info(&yesterday)
             }
             _ => {
-                println!("為替データは次の通りです。");
+                println!("💰計算に利用する為替データは次の通りです💰");
                 println!(
-                    "日付: {} || $→￥: 始値: {:?}, (終値): {:?} || €→$: 始値: {:?}, 終値: {:?}",
+                    "  日付: {} || $ → ¥: 始値: {:?}, 終値: {:?} || € → $: 始値: {:?}, 終値: {:?}",
                     x.date,
                     x.usd_to_yen_opening_price.unwrap(),
                     x.usd_to_yen_closing_price.unwrap(),
@@ -106,9 +106,77 @@ fn get_target_exchange_info(date: &String) -> Option<ExchangeInfo> {
     }
 }
 
+enum OpenOrClose {
+    OpeningPrice,
+    ClosingPrice,
+}
+fn print_calculation_results(
+    open_or_close: OpenOrClose,
+    amount: f64,
+    exchange_info: &ExchangeInfo,
+) {
+    let usd_to_yen_rate: f64;
+    let eur_to_usd_rate: f64;
+
+    match open_or_close {
+        OpenOrClose::OpeningPrice => {
+            usd_to_yen_rate = exchange_info.usd_to_yen_opening_price.unwrap();
+            eur_to_usd_rate = exchange_info.eur_to_usd_opening_price.unwrap();
+            println!("✨ 始値で換算した結果です ✨")
+        }
+        OpenOrClose::ClosingPrice => {
+            usd_to_yen_rate = exchange_info.usd_to_yen_closing_price.unwrap();
+            eur_to_usd_rate = exchange_info.eur_to_usd_closing_price.unwrap();
+            println!("✨ 終値で換算した結果です ✨")
+        }
+    }
+
+    let usd_to_yen = amount * usd_to_yen_rate;
+    println!(
+        "  $ {} => ¥ {}",
+        amount,
+        (usd_to_yen * 10000f64).round() / 10000f64,
+    );
+
+    let usd_to_eur = amount / eur_to_usd_rate;
+    println!(
+        "  $ {} => € {}",
+        amount,
+        (usd_to_eur * 10000f64).round() / 10000f64,
+    );
+
+    let yen_to_usd = amount / usd_to_yen_rate;
+    println!(
+        "  ¥ {} => $ {}",
+        amount,
+        (yen_to_usd * 10000f64).round() / 10000f64,
+    );
+
+    let yen_to_eur = (amount / usd_to_yen_rate) / (eur_to_usd_rate);
+    println!(
+        "  ¥ {} => € {}",
+        amount,
+        (yen_to_eur * 10000f64).round() / 10000f64,
+    );
+
+    let eur_to_usd = amount * eur_to_usd_rate;
+    println!(
+        "  € {} => $ {}",
+        amount,
+        (eur_to_usd * 10000f64).round() / 10000f64,
+    );
+
+    let eur_to_yen = (amount * eur_to_usd_rate) * (usd_to_yen_rate);
+    println!(
+        "  € {} => ¥ {}",
+        amount,
+        (eur_to_yen * 10000f64).round() / 10000f64,
+    );
+}
+
 fn main() {
     let args = AppArgs::parse();
-    let mut target_exchange_info: Option<ExchangeInfo>;
+    let mut target_exchange_info: Option<ExchangeInfo> = None;
 
     // --data_file
     if let Some(data_file) = args.data_file {
@@ -123,6 +191,17 @@ fn main() {
 
     // --amount
     if let Some(amount) = args.amount {
-        println!("Amount: {}", amount);
+        match &target_exchange_info {
+            None => {
+                println!(
+                    "--date で有効な日付を入力してください。　Amount: {}",
+                    amount
+                );
+            }
+            Some(x) => {
+                print_calculation_results(OpenOrClose::OpeningPrice, amount, x);
+                print_calculation_results(OpenOrClose::ClosingPrice, amount, x)
+            }
+        }
     };
 }
