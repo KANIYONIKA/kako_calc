@@ -1,17 +1,18 @@
-use chrono::{Duration, TimeZone, Utc};
+use ansi_term::Colour;
 use clap::Parser;
+use kako_culc::my_utils;
 use serde::Deserialize;
 use std::fs;
 use std::io::Write;
 
 #[derive(Parser)]
 struct AppArgs {
-    #[clap(long = "data_file")]
-    data_file: Option<String>,
     #[clap(short = 'd', long = "date")]
     date: Option<String>,
     #[clap(short = 'a', long = "amount")]
     amount: Option<f64>,
+    #[clap(short = 'f', long = "data_file")]
+    data_file: Option<String>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -44,24 +45,6 @@ fn create_utf8_csv_from(data_file_not_utf8: &String) {
     output_file.write(text.as_bytes()).unwrap();
 }
 
-fn get_yesterday(date: &String) -> String {
-    let vec_date = date.chars().collect::<Vec<_>>();
-    let y: i32 = String::from_iter(vec_date[0..4].to_owned())
-        .parse()
-        .unwrap();
-    let m: u32 = String::from_iter(vec_date[4..6].to_owned())
-        .parse()
-        .unwrap();
-    let d: u32 = String::from_iter(vec_date[6..8].to_owned())
-        .parse()
-        .unwrap();
-
-    let dt = Utc.ymd(y, m, d);
-    let offset = Duration::days(1);
-    let yesterday = (dt - offset).format("%Y%m%d").to_string();
-    yesterday
-}
-
 fn get_target_exchange_info(date: &String) -> Option<ExchangeInfo> {
     let target_exchange_info = {
         let mut _target_exchange_info: Option<ExchangeInfo> = None;
@@ -78,7 +61,7 @@ fn get_target_exchange_info(date: &String) -> Option<ExchangeInfo> {
 
     match &target_exchange_info {
         None => {
-            println!("Result: 入力された日付の為替データは存在しません。日付が正しいことを確認してください。日付が正しい場合は、データを確認してください。");
+            println!("{}", Colour::Purple.paint("入力された日付の為替データは存在しません。日付が正しいことを確認してください。日付が正しい場合は、データを確認してください。"));
             None
         }
         Some(x) => match x.usd_to_yen_opening_price {
@@ -87,11 +70,17 @@ fn get_target_exchange_info(date: &String) -> Option<ExchangeInfo> {
                     "{} は営業日ではないため前日のデータの取得を試みます。",
                     x.date
                 );
-                let yesterday = get_yesterday(&x.date);
+                let yesterday = my_utils::get_yesterday(&x.date);
                 get_target_exchange_info(&yesterday)
             }
             _ => {
-                println!("💰計算に利用する為替データは次の通りです💰");
+                println!("------------------------------------------");
+                println!(
+                    "{}",
+                    Colour::Blue.paint("💰計算に利用する為替データは次の通りです💰")
+                );
+                println!("------------------------------------------");
+
                 println!(
                     "  日付: {} || $ → ¥: 始値: {:?}, 終値: {:?} || € → $: 始値: {:?}, 終値: {:?}",
                     x.date,
@@ -110,6 +99,7 @@ enum OpenOrClose {
     OpeningPrice,
     ClosingPrice,
 }
+
 fn print_calculation_results(
     open_or_close: OpenOrClose,
     amount: f64,
@@ -122,12 +112,18 @@ fn print_calculation_results(
         OpenOrClose::OpeningPrice => {
             usd_to_yen_rate = exchange_info.usd_to_yen_opening_price.unwrap();
             eur_to_usd_rate = exchange_info.eur_to_usd_opening_price.unwrap();
-            println!("✨ 始値で換算した結果です ✨")
+            println!("---------------------------");
+            // println!("✨ 始値で換算した結果です ✨");
+            println!("{}", Colour::Blue.paint("✨ 始値で換算した結果です ✨"));
+            println!("---------------------------");
         }
         OpenOrClose::ClosingPrice => {
             usd_to_yen_rate = exchange_info.usd_to_yen_closing_price.unwrap();
             eur_to_usd_rate = exchange_info.eur_to_usd_closing_price.unwrap();
-            println!("✨ 終値で換算した結果です ✨")
+            println!("---------------------------");
+            // println!("✨ 終値で換算した結果です ✨");
+            println!("{}", Colour::Blue.paint("✨ 終値で換算した結果です ✨"));
+            println!("---------------------------");
         }
     }
 
@@ -135,42 +131,42 @@ fn print_calculation_results(
     println!(
         "  $ {} => ¥ {}",
         amount,
-        (usd_to_yen * 10000f64).round() / 10000f64,
+        my_utils::round_decimal_pt(usd_to_yen, 4),
     );
 
     let usd_to_eur = amount / eur_to_usd_rate;
     println!(
         "  $ {} => € {}",
         amount,
-        (usd_to_eur * 10000f64).round() / 10000f64,
+        my_utils::round_decimal_pt(usd_to_eur, 4),
     );
 
     let yen_to_usd = amount / usd_to_yen_rate;
     println!(
         "  ¥ {} => $ {}",
         amount,
-        (yen_to_usd * 10000f64).round() / 10000f64,
+        my_utils::round_decimal_pt(yen_to_usd, 4),
     );
 
     let yen_to_eur = (amount / usd_to_yen_rate) / (eur_to_usd_rate);
     println!(
         "  ¥ {} => € {}",
         amount,
-        (yen_to_eur * 10000f64).round() / 10000f64,
+        my_utils::round_decimal_pt(yen_to_eur, 4),
     );
 
     let eur_to_usd = amount * eur_to_usd_rate;
     println!(
         "  € {} => $ {}",
         amount,
-        (eur_to_usd * 10000f64).round() / 10000f64,
+        my_utils::round_decimal_pt(eur_to_usd, 4),
     );
 
     let eur_to_yen = (amount * eur_to_usd_rate) * (usd_to_yen_rate);
     println!(
         "  € {} => ¥ {}",
         amount,
-        (eur_to_yen * 10000f64).round() / 10000f64,
+        my_utils::round_decimal_pt(eur_to_yen, 4),
     );
 }
 
@@ -194,7 +190,8 @@ fn main() {
         match &target_exchange_info {
             None => {
                 println!(
-                    "--date で有効な日付を入力してください。　Amount: {}",
+                    "{}（Amount: {}）",
+                    Colour::Purple.paint("日付を指定してください。"),
                     amount
                 );
             }

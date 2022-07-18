@@ -1,5 +1,5 @@
 [package]
-name = "past_date_currency_calculator"
+name = "kako_culc"
 version = "0.1.0"
 edition = "2021"
 
@@ -9,5 +9,6 @@ edition = "2021"
 encoding_rs = "0.8.31"
 chrono = "0.4.19"
 csv = "1.1"
+ansi_term = "0.12.1"
 clap = { version = "3.2.12", features = ["derive"] }
 serde = { version = "1.0.139", features = ["derive"] }
