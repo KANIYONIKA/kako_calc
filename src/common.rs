@@ -14,10 +14,14 @@ pub struct AppArgs {
 }
 impl AppArgs {
     pub fn is_all_none(&self) -> bool {
-        if self.date == None && self.amount == None && self.file_path == None {
-            return true;
+        match self {
+            AppArgs {
+                date: None,
+                amount: None,
+                file_path: None,
+            } => true,
+            _ => false,
         }
-        false
     }
 }
 
