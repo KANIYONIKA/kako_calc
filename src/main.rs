@@ -6,10 +6,13 @@ use kako_calc::about_file_path;
 use kako_calc::common::AppArgs;
 use kako_calc::common::ExchangeInfo;
 use kako_calc::common::OpenOrClose;
+use kako_calc::my_utils;
 use std::cmp::Ordering;
 use std::io;
 
 fn main() {
+    my_utils::executed_shell_command("clear".to_string());
+
     let args = AppArgs::parse();
     let mut target_exchange_info: Option<ExchangeInfo> = None;
 
