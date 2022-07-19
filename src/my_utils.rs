@@ -62,9 +62,6 @@ pub fn get_directory_info() -> DirectoryInfo {
     directory_info
 }
 
-pub fn cd_to_executed_directory() {
-    let directory_info = get_directory_info();
-    let command = String::new() + "cd " + &directory_info.path_executed;
-
+pub fn executed_shell_command(command: String) {
     std::process::Command::new(command).status().unwrap();
 }
